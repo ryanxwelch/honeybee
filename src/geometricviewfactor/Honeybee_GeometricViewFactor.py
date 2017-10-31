@@ -62,6 +62,7 @@ class GeometricViewFactor(object):
             shadingContext: A list of meshes representing the opaque surfaces of the zone.  These are what were used to determine the sky view factor and the direct sun falling on occupants.
             closedAirVolumes: The closed Breps representing the zones of continuous air volume (when air walls are excluded).  Zones within the same breps will have the stratification calculation done together.
     """
+
     def __init__(self,srf_lst_,grid_size_):
         #TODO: Revise with the optional parameters
         self.srf_lst = srf_lst_
@@ -70,6 +71,6 @@ class GeometricViewFactor(object):
 
     def __repr__(self):
         return "Num of srf: {a}, grid size: {b}".format(
-            a = len(srf_lst)
+            a = len(srf_lst),
             b = self.grid_size
             )
