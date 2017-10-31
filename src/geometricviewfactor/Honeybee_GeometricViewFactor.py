@@ -63,14 +63,29 @@ class GeometricViewFactor(object):
             closedAirVolumes: The closed Breps representing the zones of continuous air volume (when air walls are excluded).  Zones within the same breps will have the stratification calculation done together.
     """
 
-    def __init__(self,srf_lst_,grid_size_):
+    def __init__(self,srf_lst_,pt_lst_,grid_size_):
         #TODO: Revise with the optional parameters
         self.srf_lst = srf_lst_
+        self.pt_lst = pt_lst_
         self.grid_size = grid_size_
 
+        #Output
+        self.viewVectors = None
 
     def __repr__(self):
-        return "Num of srf: {a}, grid size: {b}".format(
-            a = len(srf_lst),
-            b = self.grid_size
+        return "Num of srf: {a}, num of pt: {b}, grid size: {c}".format(
+            a = len(self.srf_lst),
+            b = len(self.pt_lst),
+            c = self.grid_size
             )
+
+    def generate_mesh_rhino(self):
+        pass
+
+    def main(self):
+        self.viewVectors = self.__repr__()
+
+if _runIt:
+    gvf = GeometricViewFactor(_srf_lst, _pt_lst, _grid_size)
+    gvf.main()
+    viewVectors = gvf.viewVectors
