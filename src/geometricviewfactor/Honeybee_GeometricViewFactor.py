@@ -135,6 +135,8 @@ class GeometricViewFactor(object):
         self.srf_lst = srf_lst_
         self.pt_lst = pt_lst_
         self.grid_size = grid_size_
+        self.srf_num = len(self.srf_lst)
+        self.pt_num = len(self.pt_lst)
 
         #Output
         self.viewVectors = None
@@ -149,7 +151,7 @@ class GeometricViewFactor(object):
     def zeros(self,m,n):
         """ Creates m x n zero matrix (m rows, n columns)
 
-        The convention here is chosen to integrate with numpy arrays,
+        The convention here is chosen to correspond to numpy arrays,
         which in turn is based on convention of accessing element access
         as: matrix[row][col]
 
@@ -166,7 +168,7 @@ class GeometricViewFactor(object):
         Convert to numpy array, np.array(matrix)
 
         """
-        return map(lambda n_: map(lambda m_: 0., range(m)), range(n))
+        return map(lambda m_: map(lambda n_: 0, range(n)), range(m))
 
     def find_dist_to_srf(self):
         """ Find the least distance from view center point to a surface.
@@ -174,27 +176,111 @@ class GeometricViewFactor(object):
             self.srf_lst
             self.pt_lst
         properties:
-            self.dist2srf   # len(srf_lst) x len(pt_lst) matrix of distances
+            self.dist2srf   # (m) len(srf_lst) x len(pt_lst) matrix of distances
         """
-        self.dist2srf = self.zeros(len(self.srf_lst), len(self.pt_lst))
+        self.dist2srf = self.zeros(self.pt_num, self.srf_num)
 
-        for i in xrange(len(self.pt_lst)):
+        for i in xrange(self.pt_num):
             view_center_pt = self.pt_lst[i]
-            for j in xrange(len(self.srf_lst)):
+            for j in xrange(self.srf_num):
                 srf = self.srf_lst[j]
                 close2pt = srf.ClosestPoint(view_center_pt)
                 self.dist2srf[i][j] = close2pt.DistanceTo(view_center_pt)
 
-    def generate_mesh_rhino(self):
-        """ Generate a rhino mesh to....
+    def create_detail_mesh(self):
+        """ Generates mesh from brep with specified grid size
         args:
+            self.grid_size
+            self.srf_lst
+            self.pt_lst
+        properties:
+            self.detail_mesh_lst # pt_num x srf_num matrix of mesh
+
+        """
+
+        self.detail_mesh_lst = self.zeros(self.pt_num, self.srf_num)
+        detail_mesh_param = rc.Geometry.MeshingParameters() # meshing parameters object
+
+        for i in xrange(self.pt_num):
+            for j in xrange(self.srf_num):
+                # Change mesh resolutionbased on ray distance from viewpt
+                detail_mesh_param.MinimumEdgeLength = self.grid_size * self.dist2srf[i][j]
+                detail_mesh_param.MaximumEdgeLength = self.grid_size * self.dist2srf[i][j]
+                self.detail_mesh_lst[i][j] = rc.Geometry.Mesh.CreateFromBrep(self.srf_lst[j],
+                    detail_mesh_param)[0]
+                #print i,j, self.mesh_lst[i][j], self.grid_size * self.dist2srf[i][j]
+
+    def create_simple_mesh(self):
+        """ Generates jagged fast mesh from brep
+        args:
+            self.grid_size
+            self.srf_lst
+            self.pt_lst
+        properties:
+            self.simple_mesh_lst # pt_num x srf_num matrix of mesh
+
+        """
+
+        self.simple_mesh_lst = self.zeros(self.pt_num, self.srf_num)
+        simple_mesh_param = rc.Geometry.MeshingParameters.Coarse # Corresponds to jagged and fast
+
+        for i in xrange(self.pt_num):
+            for j in xrange(self.srf_num):
+                self.simple_mesh_lst[i][j] = rc.Geometry.Mesh.CreateFromBrep(self.srf_lst[j],
+                    simple_mesh_param)[0]
+                #print i,j, self.mesh_lst[i][j], self.grid_size * self.dist2srf[i][j]
+
+    def get_mesh_properties(self):
+        """ Gets mesh face properties
+        args:
+            self.detail_mesh_lst
+        properties:
+            self.face_area      # (m2) 3d matrix
+            self.face_normal    # (unit vector) 3d matrix
+            self.face_pt        # center point 3d matrix
+        """
+        self.face_area = self.zeros(self.pt_num, self.srf_num)
+        self.face_normal = self.zeros(self.pt_num, self.srf_num)
+        self.face_point = self.zeros(self.pt_num, self.srf_num)
+
+        for i in xrange(self.pt_num):
+            for j in xrange(self.srf_num):
+                mesh = self.detail_mesh_lst[i][j]
+                mesh.FaceNormals.ComputeFaceNormals()
+                # Create zero array of lenght of faces
+                self.face_area[i][j] = map(lambda f: 0, range(mesh.Faces.Count))
+                self.face_normal[i][j] = map(lambda f: 0, range(mesh.Faces.Count))
+                self.face_point[i][j] = map(lambda f: 0, range(mesh.Faces.Count))
+                for k in xrange(mesh.Faces.Count):
+                    #print rc.Geometry.AreaMassProperties.Compute(mesh.Faces[k])
+                    self.face_normal[i][j][k] = mesh.FaceNormals[k]
+                    self.face_point[i][j][k] = mesh.Faces.GetFaceCenter(k)
+                    
+    def calculate_view_factors(self):
+        """ Calculates view factor
+        vf = a * dot(r,n) / 4 * pi *dist(r,n)^2
+        args:
+            self.simple_mesh_lst        # Occlusion
+            self.face_area      # (m2) matrix
+            self.face_normal    # (unit vector) matrix
+            self.face_pt        # center point matrix
+        properties:
+            A
+            B
+            C
         """
         pass
 
     def main(self):
 
         self.find_dist_to_srf()
-        self.generate_mesh_rhino()
+        self.create_detail_mesh()
+        self.create_simple_mesh()
+        self.get_mesh_properties()
+
+
+        self.calculate_view_factors()
+
         self.viewVectors = self.__repr__()
 
 if _runIt:
