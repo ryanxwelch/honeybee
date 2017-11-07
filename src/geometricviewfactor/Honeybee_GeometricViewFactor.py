@@ -247,23 +247,25 @@ class GeometricViewFactor(object):
             for j in xrange(self.srf_num):
                 mesh = self.detail_mesh_lst[i][j]
                 mesh.FaceNormals.ComputeFaceNormals()
+                mesh.FaceNormals.UnitizeFaceNormals()
                 # Create zero array of lenght of faces
                 self.face_area[i][j] = map(lambda f: 0, range(mesh.Faces.Count))
                 self.face_normal[i][j] = map(lambda f: 0, range(mesh.Faces.Count))
                 self.face_point[i][j] = map(lambda f: 0, range(mesh.Faces.Count))
                 for k in xrange(mesh.Faces.Count):
+                    #TODO: How to get mesh face area?
                     #print rc.Geometry.AreaMassProperties.Compute(mesh.Faces[k])
                     self.face_normal[i][j][k] = mesh.FaceNormals[k]
                     self.face_point[i][j][k] = mesh.Faces.GetFaceCenter(k)
-                    
+
     def calculate_view_factors(self):
         """ Calculates view factor
         vf = a * dot(r,n) / 4 * pi *dist(r,n)^2
         args:
             self.simple_mesh_lst        # Occlusion
-            self.face_area      # (m2) matrix
-            self.face_normal    # (unit vector) matrix
-            self.face_pt        # center point matrix
+            self.face_area      # (m2) 3d matrix
+            self.face_normal    # (unit vector) 3d matrix
+            self.face_point        # center point 3d matrix
         properties:
             A
             B
