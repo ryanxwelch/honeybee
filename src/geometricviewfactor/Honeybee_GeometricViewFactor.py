@@ -254,7 +254,9 @@ class GeometricViewFactor(object):
                 self.face_point[i][j] = map(lambda f: 0, range(mesh.Faces.Count))
                 for k in xrange(mesh.Faces.Count):
                     #TODO: How to get mesh face area?
-                    #print rc.Geometry.AreaMassProperties.Compute(mesh.Faces[k])
+                    # https://github.com/KieranTimberlake/CITA-Tools/blob/master/CITA/Util.cs#L149
+                    # https://stackoverflow.com/questions/12642256/python-find-area-of-polygon-from-xyz-coordinates
+                    # print rc.Geometry.AreaMassProperties.Compute(mesh.Faces[k])
                     self.face_normal[i][j][k] = mesh.FaceNormals[k]
                     self.face_point[i][j][k] = mesh.Faces.GetFaceCenter(k)
 
