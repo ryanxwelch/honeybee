@@ -230,6 +230,34 @@ class GeometricViewFactor(object):
                     simple_mesh_param)[0]
                 #print i,j, self.mesh_lst[i][j], self.grid_size * self.dist2srf[i][j]
 
+
+    def get_mesh_face_area(self,mesh,face_index):
+        """Calculates mesh face area.
+        For triangle faces
+            = 1/2 || cross-product of bounding edges ||
+        For quadrilateral faces
+            = 1/2 || cross-product of interior diagonals ||
+
+        args:
+            mesh            # Rhino common mesh
+            face_index      # index of mesh face
+        """
+
+        face = mesh.Faces[face_index]
+
+        if face.IsQuad:
+            vertex_lst = map(lambda v: mesh.Vertices[face.Item[v]], range(4))
+            diag1 = rc.Geometry.Vector3d(vertex_lst[3] - vertex_lst[1])
+            diag2 = rc.Geometry.Vector3d(vertex_lst[2] - vertex_lst[0])
+            face_area = 0.5 * rc.Geometry.Vector3d.CrossProduct(diag1,diag2).Length
+        else:
+            vertex_lst = map(lambda v: mesh.Vertices[face.Item[v]], range(3))
+            edge1 = rc.Geometry.Vector3d(vertex_lst[2] - vertex_lst[0])
+            edge2 = rc.Geometry.Vector3d(vertex_lst[1] - vertex_lst[0])
+            face_area = 0.5 * rc.Geometry.Vector3d.CrossProduct(edge1,edge2).Length
+
+        return face_area
+
     def get_mesh_properties(self):
         """ Gets mesh face properties
         args:
@@ -253,10 +281,7 @@ class GeometricViewFactor(object):
                 self.face_normal[i][j] = map(lambda f: 0, range(mesh.Faces.Count))
                 self.face_point[i][j] = map(lambda f: 0, range(mesh.Faces.Count))
                 for k in xrange(mesh.Faces.Count):
-                    #TODO: How to get mesh face area?
-                    # https://github.com/KieranTimberlake/CITA-Tools/blob/master/CITA/Util.cs#L149
-                    # https://stackoverflow.com/questions/12642256/python-find-area-of-polygon-from-xyz-coordinates
-                    # print rc.Geometry.AreaMassProperties.Compute(mesh.Faces[k])
+                    self.face_area[i][j][k] = self.get_mesh_face_area(mesh,k)
                     self.face_normal[i][j][k] = mesh.FaceNormals[k]
                     self.face_point[i][j][k] = mesh.Faces.GetFaceCenter(k)
 
@@ -264,10 +289,10 @@ class GeometricViewFactor(object):
         """ Calculates view factor
         vf = a * dot(r,n) / 4 * pi *dist(r,n)^2
         args:
-            self.simple_mesh_lst        # Occlusion
-            self.face_area      # (m2) 3d matrix
-            self.face_normal    # (unit vector) 3d matrix
-            self.face_point        # center point 3d matrix
+            self.simple_mesh_lst    # Occlusion
+            self.face_area          # (m2) 3d matrix
+            self.face_normal        # (unit vector) 3d matrix
+            self.face_point         # center point 3d matrix
         properties:
             A
             B
