@@ -3,7 +3,6 @@
 # Honeybee: A Plugin for Environmental Analysis (GPL) started by Mostapha Sadeghipour Roudsari
 #
 # This file is part of Honeybee.
-# TODO: Which emails should we use?
 # Copyright (c) 2013-2017, Ryan Welch <rwelch@kierantimberlake.com>, Saeran Vasanthakumar <svasanth@kierantimberlake.com>, and Chris Mackey <Chris@MackeyArchitecture.com>
 # Honeybee is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published
@@ -245,6 +244,7 @@ class GeometricViewFactor(object):
 
         face = mesh.Faces[face_index]
 
+        #TODO: vertex_lst[3] - vertex_lst[1]  = point3f. Should Vector3f be used?
         if face.IsQuad:
             vertex_lst = map(lambda v: mesh.Vertices[face.Item[v]], range(4))
             diag1 = rc.Geometry.Vector3d(vertex_lst[3] - vertex_lst[1])
@@ -271,6 +271,7 @@ class GeometricViewFactor(object):
         self.face_normal = self.zeros(self.pt_num, self.srf_num)
         self.face_point = self.zeros(self.pt_num, self.srf_num)
 
+        #area_chk = 0.
         for i in xrange(self.pt_num):
             for j in xrange(self.srf_num):
                 mesh = self.detail_mesh_lst[i][j]
@@ -284,11 +285,14 @@ class GeometricViewFactor(object):
                     self.face_area[i][j][k] = self.get_mesh_face_area(mesh,k)
                     self.face_normal[i][j][k] = mesh.FaceNormals[k]
                     self.face_point[i][j][k] = mesh.Faces.GetFaceCenter(k)
+                    #area_chk += self.face_area[i][j][k]
+        #print 'areachk', area_chk
 
     def calculate_view_factors(self):
         """ Calculates view factor
         vf = a * dot(r,n) / 4 * pi *dist(r,n)^2
         args:
+            self.pt_lst             # view center points
             self.simple_mesh_lst    # Occlusion
             self.face_area          # (m2) 3d matrix
             self.face_normal        # (unit vector) 3d matrix
