@@ -92,7 +92,7 @@ class CheckTheInputs(object):
     def __init__(self):
         self._pt_lst = []
         self._srf_lst = []
-        self.check_data = False
+        self.check_inputs = False
 
     def check_srf_inputs(self):
         srf_mesh_lst, srf_brep_lst = self.lb_preparation.cleanAndCoerceList(_srf_lst)
@@ -120,7 +120,7 @@ class CheckTheInputs(object):
     def main(self):
         check_data_1 = self.check_srf_inputs()
         check_data_2 = self.check_pt_inputs()
-        self.check_data = check_data_1 and check_data_1
+        self.check_inputs = check_data_1 and check_data_1
 
 class GeometricViewFactor(object):
 
@@ -130,15 +130,24 @@ class GeometricViewFactor(object):
             self.srf_lst    # surface breps of analysis geometry
             self.pt_lst     # view points
         """
-        #TODO: Revise with the optional parameters
-        self.srf_lst = srf_lst_
-        self.pt_lst = pt_lst_
-        self.grid_size = grid_size_
+        self.srf_lst = srf_lst_         # surrounding geometry as surfaces lst
+        self.pt_lst = pt_lst_           # view point list
+        self.grid_size = grid_size_     # grid size for surfaces (not view point mesh)
         self.srf_num = len(self.srf_lst)
         self.pt_num = len(self.pt_lst)
 
         #Output
         self.viewVectors = None
+
+        # additional inputs for lb surface view analysis and additional inputs for lb view sphere analysis
+        self._plane_lst = []            # plane rather then poiints
+        self._view_resolution = 0       # An interger, which sets the number of times that the tergenza skyview patches are split.
+        self._parallel = False          # run processes in parallel
+        self.includeOutdoor_ = False    # Take the parts of the input Srf that are outdoors and color them with temperatures representative of outdoor conditions.
+
+        #TODO: this exists in lb, but I'm not sure our method can take this into account?
+        self._context_lst = []          # context geometries that block view
+        self.context_transmission_lst  # optional transmissivity for context geometries
 
     def __repr__(self):
         return "Num of srf: {a}, num of pt: {b}, grid size: {c}".format(
@@ -255,7 +264,7 @@ class GeometricViewFactor(object):
             edge1 = rc.Geometry.Vector3d(vertex_lst[2] - vertex_lst[0])
             edge2 = rc.Geometry.Vector3d(vertex_lst[1] - vertex_lst[0])
             face_area = 0.5 * rc.Geometry.Vector3d.CrossProduct(edge1,edge2).Length
-        
+
         return face_area
 
     def get_mesh_properties(self):
@@ -321,7 +330,7 @@ if _runIt:
     chkdata = CheckTheInputs()
     chkdata.main()
 
-    if chkdata.check_data:
+    if chkdata.check_inputs:
         gvf = GeometricViewFactor(chkdata._srf_lst, chkdata._pt_lst, _grid_size)
         gvf.main()
         viewVectors = gvf.viewVectors
