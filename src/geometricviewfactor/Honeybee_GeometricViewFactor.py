@@ -136,18 +136,18 @@ class GeometricViewFactor(object):
         self.srf_num = len(self.srf_lst)
         self.pt_num = len(self.pt_lst)
 
-        #Output
+        # Output
         self.viewVectors = None
 
-        # additional inputs for lb surface view analysis and additional inputs for lb view sphere analysis
+        # Additional inputs for lb surface view analysis and additional inputs for lb view sphere analysis
         self._plane_lst = []            # plane rather then poiints
         self._view_resolution = 0       # An interger, which sets the number of times that the tergenza skyview patches are split.
         self._parallel = False          # run processes in parallel
         self.includeOutdoor_ = False    # Take the parts of the input Srf that are outdoors and color them with temperatures representative of outdoor conditions.
 
         #TODO: this exists in lb, but I'm not sure our method can take this into account?
-        self._context_lst = []          # context geometries that block view
-        self.context_transmission_lst  # optional transmissivity for context geometries
+        self._context_lst = []              # context geometries that block view
+        self.context_transmission_lst = []  # optional transmissivity for context geometries
 
     def __repr__(self):
         return "Num of srf: {a}, num of pt: {b}, grid size: {c}".format(
