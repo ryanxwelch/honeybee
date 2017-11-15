@@ -255,7 +255,7 @@ class GeometricViewFactor(object):
             edge1 = rc.Geometry.Vector3d(vertex_lst[2] - vertex_lst[0])
             edge2 = rc.Geometry.Vector3d(vertex_lst[1] - vertex_lst[0])
             face_area = 0.5 * rc.Geometry.Vector3d.CrossProduct(edge1,edge2).Length
-
+        
         return face_area
 
     def get_mesh_properties(self):
