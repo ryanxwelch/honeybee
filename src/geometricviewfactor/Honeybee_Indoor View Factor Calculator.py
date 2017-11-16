@@ -82,6 +82,12 @@ import time
 
 import pprint
 
+#TODO: This is temp to deal with geometric view factor class, eventually move to honeybee_honeybee.py
+from Honeybee_GeometricViewFactor import GeometricViewFactor
+#TODO: Not sure if we need this anymore
+from Honeybee_GeometricViewFactor import CheckTheInputs
+
+
 w = gh.GH_RuntimeMessageLevel.Warning
 tol = sc.doc.ModelAbsoluteTolerance
 
@@ -546,7 +552,6 @@ def prepareGeometry(gridSize, distFromFloor, removeInt, sectionMethod, sectionBr
             finalBrep = splitBrep[0]
         except:
             finalBrep = brep
-
         return finalBrep
 
     #If interior walls have ben removed, see which surfaces are adjacent and re-make the lists fo zones.
